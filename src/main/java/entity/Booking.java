@@ -1,0 +1,224 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package entity;
+
+import jakarta.json.bind.annotation.JsonbTransient; // 👈 Import indispensable
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
+/**
+ *
+ * @author ajlan
+ */
+@Entity
+@Table(name = "booking")
+@XmlRootElement
+@NamedQueries({
+    @NamedQuery(name = "Booking.findAll", query = "SELECT b FROM Booking b"),
+    @NamedQuery(name = "Booking.findById", query = "SELECT b FROM Booking b WHERE b.id = :id"),
+    @NamedQuery(name = "Booking.findBySeats", query = "SELECT b FROM Booking b WHERE b.seats = :seats"),
+    @NamedQuery(name = "Booking.findByPrice", query = "SELECT b FROM Booking b WHERE b.price = :price"),
+    @NamedQuery(name = "Booking.findByCommission", query = "SELECT b FROM Booking b WHERE b.commission = :commission"),
+    @NamedQuery(name = "Booking.findByTotalPaid", query = "SELECT b FROM Booking b WHERE b.totalPaid = :totalPaid"),
+    @NamedQuery(name = "Booking.findByStatus", query = "SELECT b FROM Booking b WHERE b.status = :status"),
+    @NamedQuery(name = "Booking.findByCreatedAt", query = "SELECT b FROM Booking b WHERE b.createdAt = :createdAt")})
+public class Booking implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Basic(optional = false)
+    @Column(name = "id")
+    private Integer id;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "seats")
+    private int seats;
+    @Column(name = "price")
+    private BigDecimal price;
+    @Column(name = "commission")
+    private BigDecimal commission;
+    @Column(name = "total_paid")
+    private BigDecimal totalPaid;
+    @Size(max = 20)
+    @Column(name = "status")
+    private String status;
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createdAt;
+    
+    // 👇 CORRECTION 1 : Renommé en 'carRideId' pour correspondre au mappedBy de CarRide.java
+    @JoinColumn(name = "ride_id", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    private CarRide carRideId; 
+    
+    @JoinColumn(name = "passenger_id", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    private User passengerId;
+    
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "bookingId")
+    private Detour detour;
+    
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "bookingId")
+    private List<Review> reviewList;
+
+    public Booking() {
+    }
+
+    public Booking(Integer id) {
+        this.id = id;
+    }
+
+    public Booking(Integer id, int seats) {
+        this.id = id;
+        this.seats = seats;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public int getSeats() {
+        return seats;
+    }
+
+    public void setSeats(int seats) {
+        this.seats = seats;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public BigDecimal getCommission() {
+        return commission;
+    }
+
+    public void setCommission(BigDecimal commission) {
+        this.commission = commission;
+    }
+
+    public BigDecimal getTotalPaid() {
+        return totalPaid;
+    }
+
+    public void setTotalPaid(BigDecimal totalPaid) {
+        this.totalPaid = totalPaid;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // 👇 CORRECTION 2 : Getter/Setter mis à jour + JsonbTransient
+    @JsonbTransient
+    public CarRide getCarRideId() {
+        return carRideId;
+    }
+
+    public void setCarRideId(CarRide carRideId) {
+        this.carRideId = carRideId;
+    }
+    
+    // Getter virtuel pour le Front (si besoin)
+    public Integer getRideIdSimple() {
+        return carRideId != null ? carRideId.getId() : null;
+    }
+
+    // 👇 CORRECTION 3 : JsonbTransient pour le passager aussi
+    @JsonbTransient
+    public User getPassengerId() {
+        return passengerId;
+    }
+
+    public void setPassengerId(User passengerId) {
+        this.passengerId = passengerId;
+    }
+
+    public Detour getDetour() {
+        return detour;
+    }
+
+    public void setDetour(Detour detour) {
+        this.detour = detour;
+    }
+
+    @XmlTransient
+    @JsonbTransient // Protection boucle
+    public List<Review> getReviewList() {
+        return reviewList;
+    }
+
+    public void setReviewList(List<Review> reviewList) {
+        this.reviewList = reviewList;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (id != null ? id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof Booking)) {
+            return false;
+        }
+        Booking other = (Booking) object;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "entity.Booking[ id=" + id + " ]";
+    }
+    
+}

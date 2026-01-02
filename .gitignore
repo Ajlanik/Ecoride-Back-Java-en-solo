@@ -1,0 +1,20 @@
+# Maven - Fichiers compilés
+target/
+*.class
+
+# NetBeans - Fichiers de config perso
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# IDE files (si tu utilises VS Code ou IntelliJ aussi)
+.vscode/
+.idea/
+*.iml
+
+# Système
+.DS_Store
+Thumbs.db
