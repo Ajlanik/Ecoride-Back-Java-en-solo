@@ -4,6 +4,7 @@
  */
 package entity;
 
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -25,6 +26,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -84,6 +86,16 @@ public class Car implements Serializable {
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
+    @Column(name = "purchase_date")
+    @JsonbDateFormat("yyyy-MM-dd")
+    private LocalDate purchaseDate;
+
+    @Column(name = "insurance_date")
+    @JsonbDateFormat("yyyy-MM-dd")
+    private LocalDate insuranceDate;
+
+    @Column(name = "is_favorite")
+    private Boolean isFavorite = false; // Par défaut à faux
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private User user;
@@ -219,6 +231,30 @@ public class Car implements Serializable {
     @Override
     public String toString() {
         return "entity.Car[ id=" + id + " ]";
+    }
+
+    public LocalDate getPurchaseDate() {
+        return purchaseDate;
+    }
+
+    public void setPurchaseDate(LocalDate purchaseDate) {
+        this.purchaseDate = purchaseDate;
+    }
+
+    public LocalDate getInsuranceDate() {
+        return insuranceDate;
+    }
+
+    public void setInsuranceDate(LocalDate insuranceDate) {
+        this.insuranceDate = insuranceDate;
+    }
+
+    public Boolean getIsFavorite() {
+        return isFavorite;
+    }
+
+    public void setIsFavorite(Boolean isFavorite) {
+        this.isFavorite = isFavorite;
     }
 
 

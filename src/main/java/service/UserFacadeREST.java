@@ -20,6 +20,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 /**
  *
  * @author ajlan
@@ -40,7 +42,11 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(User entity) {
         try {
-            // Pas besoin de logique complexe ici, un User nait sans dépendances.
+            // Hachage du mot de passe avant sauvegarde
+            if (entity.getPassword() != null) {
+                String hashed = BCrypt.hashpw(entity.getPassword(), BCrypt.gensalt());
+                entity.setPassword(hashed);
+            }
             super.create(entity);
         } catch (ConstraintViolationException e) {
             e.getConstraintViolations().forEach(violation -> {
@@ -57,16 +63,30 @@ public class UserFacadeREST extends AbstractFacade<User> {
     public void edit(@PathParam("id") Integer id, User entity) {
         User existingUser = super.find(id);
 
-        if (existingUser == null) return;
+        if (existingUser == null) {
+            return;
+        }
 
         // Mise à jour partielle (On ne touche qu'aux champs envoyés)
-        if (entity.getFirstName() != null) existingUser.setFirstName(entity.getFirstName());
-        if (entity.getLastName() != null) existingUser.setLastName(entity.getLastName());
-        if (entity.getPhoneNumber() != null) existingUser.setPhoneNumber(entity.getPhoneNumber());
-        if (entity.getDateOfBirth() != null) existingUser.setDateOfBirth(entity.getDateOfBirth());
-        if (entity.getBio() != null) existingUser.setBio(entity.getBio());
-        if (entity.getNationalId() != null) existingUser.setNationalId(entity.getNationalId());
-        
+        if (entity.getFirstName() != null) {
+            existingUser.setFirstName(entity.getFirstName());
+        }
+        if (entity.getLastName() != null) {
+            existingUser.setLastName(entity.getLastName());
+        }
+        if (entity.getPhoneNumber() != null) {
+            existingUser.setPhoneNumber(entity.getPhoneNumber());
+        }
+        if (entity.getDateOfBirth() != null) {
+            existingUser.setDateOfBirth(entity.getDateOfBirth());
+        }
+        if (entity.getBio() != null) {
+            existingUser.setBio(entity.getBio());
+        }
+        if (entity.getNationalId() != null) {
+            existingUser.setNationalId(entity.getNationalId());
+        }
+
         // Ajout : Mise à jour du mot de passe
         if (entity.getPassword() != null && !entity.getPassword().isEmpty()) {
             existingUser.setPassword(entity.getPassword());

@@ -27,6 +27,7 @@ import jakarta.xml.bind.annotation.XmlTransient;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.time.LocalDate;
 
 /**
  *
@@ -96,9 +97,9 @@ public class User implements Serializable {
     @Column(name = "national_id")
     private String nationalId;
     @Column(name = "date_of_birth")
-    @Temporal(TemporalType.DATE)
+   
     @JsonbDateFormat("yyyy-MM-dd") // 👈 Permet le Login sans crash
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
     @Size(max = 255)
     @Column(name = "avatar")
     private String avatar;
@@ -111,7 +112,7 @@ public class User implements Serializable {
     private Boolean isActive;
     @Column(name = "is_verified")
     private Boolean isVerified;
- @Column(name = "created_at")
+    @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss") // 👈 Format Timestamp
     private Date createdAt;
@@ -129,7 +130,6 @@ public class User implements Serializable {
     private List<Review> reviewList1;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "driver")
     private List<CarRide> rideList;
-    
 
     public User() {
     }
@@ -171,6 +171,7 @@ public class User implements Serializable {
         this.roles = roles;
     }
 
+    @JsonbTransient
     public String getPassword() {
         return password;
     }
@@ -219,11 +220,11 @@ public class User implements Serializable {
         this.nationalId = nationalId;
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -362,6 +363,5 @@ public class User implements Serializable {
     public void setPlainPassword(String plainPassword) {
         this.password = plainPassword;
     }
-    
-    
+
 }
