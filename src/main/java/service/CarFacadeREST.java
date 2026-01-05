@@ -60,9 +60,10 @@ public class CarFacadeREST extends AbstractFacade<Car> {
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Integer id, Car entity) {
+    @Produces(MediaType.APPLICATION_JSON) //
+    public Car edit(@PathParam("id") Integer id, Car entity){
         Car existingCar = super.find(id);
-        if (existingCar == null) return;
+        if (existingCar == null) return null;
 
         // Mise à jour des champs existants
         if (entity.getBrand() != null) existingCar.setBrand(entity.getBrand());
@@ -79,13 +80,22 @@ public class CarFacadeREST extends AbstractFacade<Car> {
         // On permet de modifier isFavorite ici, mais c'est mieux d'utiliser la route dédiée
         if (entity.getIsFavorite() != null) existingCar.setIsFavorite(entity.getIsFavorite());
         // -------------------------------------
-
+        
+        
+        // gestion image
+        if (entity.getPicture() != null) existingCar.setPicture(entity.getPicture());
+        
+        
+        
         if (entity.getUser() != null && entity.getUser().getId() != null) {
              User newUser = getEntityManager().find(User.class, entity.getUser().getId());
-             existingCar.setUser(newUser);
+             if (newUser != null) {
+                 existingCar.setUser(newUser);
+             }
         }
 
         super.edit(existingCar);
+        return existingCar;
     }
 
     // --- NOUVELLE MÉTHODE POUR GÉRER LE FAVORI ---

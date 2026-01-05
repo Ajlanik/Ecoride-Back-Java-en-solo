@@ -60,11 +60,14 @@ public class UserFacadeREST extends AbstractFacade<User> {
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Integer id, User entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+//public void edit(@PathParam("id") Integer id, User entity) {
+    public User edit(@PathParam("id") Integer id, User entity) {
         User existingUser = super.find(id);
 
         if (existingUser == null) {
-            return;
+//            return;
+            return null;
         }
 
         // Mise à jour partielle (On ne touche qu'aux champs envoyés)
@@ -91,8 +94,13 @@ public class UserFacadeREST extends AbstractFacade<User> {
         if (entity.getPassword() != null && !entity.getPassword().isEmpty()) {
             existingUser.setPassword(entity.getPassword());
         }
+        //avatar profil
+        if (entity.getAvatar() != null) {
+            existingUser.setAvatar(entity.getAvatar());
+        }
 
         super.edit(existingUser);
+        return existingUser;
     }
 
     @DELETE

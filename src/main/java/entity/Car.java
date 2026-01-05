@@ -81,6 +81,8 @@ public class Car implements Serializable {
     @NotNull
     @Column(name = "number_of_seat")
     private int numberOfSeat;
+    @Column(name = "picture")
+    private String picture;
     @Column(name = "is_active")
     private Boolean isActive;
     @Column(name = "created_at")
@@ -99,7 +101,7 @@ public class Car implements Serializable {
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private User user;
-    
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "car")
     private List<CarRide> rideList;
 
@@ -257,8 +259,12 @@ public class Car implements Serializable {
         this.isFavorite = isFavorite;
     }
 
+    public String getPicture() {
+        return picture;
+    }
 
-    
-    
-    
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
 }
