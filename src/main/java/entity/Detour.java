@@ -4,6 +4,7 @@
  */
 package entity;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -159,7 +160,16 @@ public class Detour implements Serializable {
     public void setDelayPickup(Integer delayPickup) {
         this.delayPickup = delayPickup;
     }
+// --- AJOUT POUR LE JSON ---
 
+    // Permet au Front d'envoyer "bookingId": 12
+    public void setBookingId(Integer id) {
+        if (id != null) {
+            this.bookingId = new Booking(id);
+        }
+    }
+
+    @JsonbTransient
     public Booking getBookingId() {
         return bookingId;
     }
@@ -192,5 +202,5 @@ public class Detour implements Serializable {
     public String toString() {
         return "entity.Detour[ id=" + id + " ]";
     }
-    
+
 }

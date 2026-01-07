@@ -45,6 +45,7 @@ public class CarFacadeREST extends AbstractFacade<Car> {
     @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(Car entity) {
+        
         // Logique pour rattacher le propriétaire (User)
         if (entity.getUser() != null && entity.getUser().getId() != null) {
             User userEnBase = getEntityManager().find(User.class, entity.getUser().getId());

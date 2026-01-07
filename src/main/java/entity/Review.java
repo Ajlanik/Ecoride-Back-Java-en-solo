@@ -172,4 +172,38 @@ public class Review implements Serializable {
         return "entity.Review[ id=" + id + " ]";
     }
     
+    // --- SETTERS MAGIQUES POUR LE JSON ---
+
+    // Permet de mapper "bookingId": 23 (entier) vers l'objet Booking
+    public void setBookingId(Integer id) {
+        if (id != null) {
+            this.bookingId = new Booking(id);
+        }
+    }
+
+    // Permet de mapper "authorUserId": 14 (ou "authorId") vers l'objet User
+    // On met les deux noms pour être sûr que ça passe peu importe ce que le front envoie
+    public void setAuthorId(Integer id) {
+        if (id != null) {
+            this.authorId = new User(id);
+        }
+    }
+    
+    // Alias pour le front qui envoie "authorUserId"
+    public void setAuthorUserId(Integer id) {
+        setAuthorId(id);
+    }
+
+    // Permet de mapper "targetUserId": 4 (ou "targetId") vers l'objet User
+    public void setTargetId(Integer id) {
+        if (id != null) {
+            this.targetId = new User(id);
+        }
+    }
+    
+    // Alias pour le front qui envoie "targetUserId"
+    public void setTargetUserId(Integer id) {
+        setTargetId(id);
+    }
+    
 }

@@ -24,7 +24,7 @@ import java.util.List;
  * @author ajlan
  */
 @Stateless
-@Path("entity.review")
+@Path("reviews")
 public class ReviewFacadeREST extends AbstractFacade<Review> {
 
     @PersistenceContext(unitName = "my_persistence_unit")

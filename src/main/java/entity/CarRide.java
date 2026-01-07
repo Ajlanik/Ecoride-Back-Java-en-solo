@@ -4,14 +4,14 @@
  */
 package entity;
 
-import converter.GeometryConverter; // 👈 Import de tes nouveaux convertisseurs
-import converter.StringListConverter; // 👈 Import de tes nouveaux convertisseurs
+import converter.GeometryConverter;
+import converter.StringListConverter;
 import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert; // 👈 Import JPA
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -32,10 +32,13 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.PrecisionModel;
 
 /**
  *
@@ -85,16 +88,20 @@ public class CarRide implements Serializable {
     @Column(name = "departure_time")
     private LocalTime departureTime;
 
-    @Column(name = "start_lat")
+    // --- CORRECTIONS MAJEURES ICI (MAPPING) ---
+    @Column(name = "start_lat") // 👈 Indispensable pour lier à start_lat en DB
     private BigDecimal startLat;
-    @Column(name = "start_lon")
+
+    @Column(name = "start_lon") // 👈 Indispensable
     private BigDecimal startLon;
-    @Column(name = "end_lat")
+
+    @Column(name = "end_lat")   // 👈 Indispensable
     private BigDecimal endLat;
-    @Column(name = "end_lon")
+
+    @Column(name = "end_lon")   // 👈 Indispensable
     private BigDecimal endLon;
 
-    // 👇 CHANGEMENT MAJEUR : On utilise une vraie Liste + Convertisseur
+    // Mapping vers la colonne 'route_path' qui contient les données
     @Column(name = "route_path", columnDefinition = "geometry(LineString,4326)")
     @Convert(converter = GeometryConverter.class)
     @JsonbTransient // On cache l'objet complexe au JSON par défaut
@@ -141,7 +148,6 @@ public class CarRide implements Serializable {
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     private Date createdAt;
 
-    // 👇 CHANGEMENT MAJEUR : On utilise une vraie Liste + Convertisseur
     @Column(name = "recurrence_days")
     @Convert(converter = StringListConverter.class)
     private List<String> recurrenceDays;
@@ -170,7 +176,7 @@ public class CarRide implements Serializable {
         this.id = id;
     }
 
-    // --- GETTERS & SETTERS (Mis à jour pour les Listes) ---
+    // --- GETTERS & SETTERS ---
     public Integer getId() {
         return id;
     }
@@ -186,14 +192,13 @@ public class CarRide implements Serializable {
     public void setDeparturePlace(String departurePlace) {
         this.departurePlace = departurePlace;
     }
-    
+
     public void setUserId(Integer id) {
         if (id != null) {
             this.driver = new User(id);
         }
     }
 
-    // Permet de lire "carId" envoyé par le front et de créer l'objet Car
     public void setCarId(Integer id) {
         if (id != null) {
             this.car = new Car(id);
@@ -336,7 +341,6 @@ public class CarRide implements Serializable {
         this.createdAt = createdAt;
     }
 
-    // 👇 Getter/Setter Recurrence (Listes)
     public List<String> getRecurrenceDays() {
         return recurrenceDays;
     }
@@ -354,7 +358,7 @@ public class CarRide implements Serializable {
     }
 
     @XmlTransient
-    @JsonbTransient
+    
     public List<Booking> getBookingList() {
         return bookingList;
     }
@@ -363,7 +367,6 @@ public class CarRide implements Serializable {
         this.bookingList = bookingList;
     }
 
-    
     public Car getCar() {
         return car;
     }
@@ -372,7 +375,6 @@ public class CarRide implements Serializable {
         this.car = car;
     }
 
-   
     public User getDriver() {
         return driver;
     }
@@ -418,13 +420,50 @@ public class CarRide implements Serializable {
         this.routePath = routePath;
     }
 
-
-    @XmlTransient // 👈 C'EST CETTE ANNOTATION QUI MANQUE
+    @XmlTransient
     public List<List<Double>> getGeometryCoords() {
         return geometryCoords;
     }
 
     public void setGeometryCoords(List<List<Double>> geometryCoords) {
         this.geometryCoords = geometryCoords;
+    }
+
+    // --- GÉOMÉTRIE JTS <-> JSON ---
+    // Cette méthode est utilisée par le mapper JSON pour exposer "geometry" au frontend
+    @XmlTransient 
+    public List<List<Double>> getGeometry() {
+        if (this.routePath == null) {
+            return null;
+        }
+        List<List<Double>> coordinates = new ArrayList<>();
+        for (Coordinate coord : this.routePath.getCoordinates()) {
+            List<Double> point = new ArrayList<>();
+            point.add(coord.y); // Latitude
+            point.add(coord.x); // Longitude
+            coordinates.add(point);
+        }
+        return coordinates;
+    }
+
+    // Cette méthode est utilisée pour peupler l'entité lors de la réception d'un JSON (création)
+    public void setGeometry(List<List<Double>> coordinates) {
+        if (coordinates == null || coordinates.isEmpty()) {
+            this.routePath = null;
+            return;
+        }
+
+        Coordinate[] jtsCoords = new Coordinate[coordinates.size()];
+        for (int i = 0; i < coordinates.size(); i++) {
+            List<Double> point = coordinates.get(i);
+            if (point.size() >= 2) {
+                double lat = point.get(0);
+                double lon = point.get(1);
+                jtsCoords[i] = new Coordinate(lon, lat);
+            }
+        }
+
+        GeometryFactory gf = new GeometryFactory(new PrecisionModel(), 4326);
+        this.routePath = gf.createLineString(jtsCoords);
     }
 }

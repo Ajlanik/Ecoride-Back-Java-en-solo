@@ -1,7 +1,4 @@
-/*
- * Fichier : service/CarRideFacadeREST.java
- * Ce fichier gère les TRAJETS (Départ, Arrivée, Prix...)
- */
+// service/CarRideFacadeREST.java
 package service;
 
 import entity.Car;
@@ -23,23 +20,17 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
-
-
 @Stateless
-@Path("carRides") // URL: /resources/carRides
+@Path("carRides")
+public class CarRideFacadeREST extends AbstractFacade<CarRide> {
 
-public class CarRideFacadeREST extends AbstractFacade<CarRide> { // ✅ Nom de classe CORRECT
-
-    
-    
     @PersistenceContext(unitName = "my_persistence_unit")
     private EntityManager em;
 
     public CarRideFacadeREST() {
-        super(CarRide.class); // ✅ Gère CarRide
+        super(CarRide.class);
     }
 
-    
     private org.locationtech.jts.geom.LineString createLineString(List<List<Double>> coords) {
         if (coords == null || coords.size() < 2) return null;
         
@@ -47,12 +38,9 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> { // ✅ Nom de c
         org.locationtech.jts.geom.Coordinate[] coordinates = new org.locationtech.jts.geom.Coordinate[coords.size()];
         
         for (int i = 0; i < coords.size(); i++) {
-            // ATTENTION : L'ordre est souvent (Longitude, Latitude) pour les géométries (X, Y)
-            // Mais Google/Leaflet envoie souvent (Lat, Lon). 
-            // Vérifie tes données. Ici je suppose que le Front envoie [Lat, Lon]
             Double lat = coords.get(i).get(0);
             Double lon = coords.get(i).get(1);
-            coordinates[i] = new org.locationtech.jts.geom.Coordinate(lon, lat); // X=Lon, Y=Lat
+            coordinates[i] = new org.locationtech.jts.geom.Coordinate(lon, lat);
         }
         return factory.createLineString(coordinates);
     }
@@ -61,20 +49,31 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> { // ✅ Nom de c
     @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(CarRide entity) {
-        // Rattachement Driver
+        System.out.println("[DEBUG-BACK] Création CarRide demandée");
+        System.out.println("  - Depart: " + entity.getDeparturePlace());
+        System.out.println("  - Arrivee: " + entity.getArrivalPlace());
+        
+        // --- 🔍 LOG DIAGNOSTIC ---
+        if (entity.getRoutePath() != null) {
+            System.out.println("  ✅ RoutePath généré (succès) : " + entity.getRoutePath().toString().substring(0, Math.min(50, entity.getRoutePath().toString().length())) + "...");
+        } else {
+            System.out.println("  ❌ RoutePath est NULL");
+        }
+        // -------------------------
+
         if (entity.getGeometryCoords() != null) {
             entity.setRoutePath(createLineString(entity.getGeometryCoords()));
         }
         if (entity.getDriver() != null && entity.getDriver().getId() != null) {
             entity.setDriver(em.find(User.class, entity.getDriver().getId()));
         }
-        // Rattachement Car
         if (entity.getCar() != null && entity.getCar().getId() != null) {
             entity.setCar(em.find(Car.class, entity.getCar().getId()));
         }
         super.create(entity);
     }
 
+    // ... (Le reste du fichier reste IDENTIQUE à votre version fournie)
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -82,7 +81,6 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> { // ✅ Nom de c
         CarRide existingRide = super.find(id);
         if (existingRide == null) return;
 
-        // Mise à jour des champs
         if (entity.getDeparturePlace() != null) existingRide.setDeparturePlace(entity.getDeparturePlace());
         if (entity.getArrivalPlace() != null) existingRide.setArrivalPlace(entity.getArrivalPlace());
         if (entity.getDepartureDate() != null) existingRide.setDepartureDate(entity.getDepartureDate());
@@ -90,7 +88,8 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> { // ✅ Nom de c
         if (entity.getPrice() != null) existingRide.setPrice(entity.getPrice());
         if (entity.getSeatsTotal() != 0) existingRide.setSeatsTotal(entity.getSeatsTotal());
         
-        // Relations
+        if (entity.getStatus() != null) existingRide.setStatus(entity.getStatus());
+        
         if (entity.getDriver() != null && entity.getDriver().getId() != null) {
             existingRide.setDriver(em.find(User.class, entity.getDriver().getId()));
         }
@@ -110,7 +109,32 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> { // ✅ Nom de c
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public CarRide find(@PathParam("id") Integer id) {
-        return super.find(id);
+        System.out.println("🔍 [DEBUG-BACK] GET /carRides/" + id + " appelé.");
+        
+        CarRide ride = super.find(id);
+        
+        if (ride != null) {
+            // --- AJOUT CRITIQUE POUR FORCER LA RELECTURE DB ---
+            try {
+                em.refresh(ride); // <--- C'est la commande magique !
+                System.out.println("   🔄 Cache invalidé, données fraîches rechargées depuis la DB.");
+            } catch (Exception e) {
+                System.out.println("   ⚠️ Impossible de rafraîchir l'entité : " + e.getMessage());
+            }
+            // --------------------------------------------------
+
+            System.out.println("   ✅ Trajet trouvé (ID=" + ride.getId() + ")");
+            System.out.println("   📍 DB StartLat : " + ride.getStartLat());
+            System.out.println("   📍 DB StartLon : " + ride.getStartLon());
+            System.out.println("   📍 DB EndLat   : " + ride.getEndLat());
+            
+            boolean hasGeo = (ride.getRoutePath() != null);
+            System.out.println("   🗺️ RoutePath   : " + (hasGeo ? "PRÉSENT" : "NULL"));
+        } else {
+            System.out.println("   ❌ Trajet introuvable !");
+        }
+        
+        return ride;
     }
 
     @GET

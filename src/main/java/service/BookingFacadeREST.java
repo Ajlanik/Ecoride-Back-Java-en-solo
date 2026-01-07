@@ -1,32 +1,27 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+// service/BookingFacadeREST.java
 package service;
 
 import entity.Booking;
-import entity.CarRide; // 👈 Import indispensable
-import entity.User;    // 👈 Import indispensable
+import entity.CarRide;
+import entity.User;
+// Pense à importer Detour si tu utilises un objet Detour séparé
+// import entity.Detour; 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.PathParam;
 
-/**
- *
- * @author ajlan
- */
 @Stateless
-@Path("bookings") // 👈 J'ai simplifié l'URL (plus propre que "entity.booking")
+@Path("bookings")
 public class BookingFacadeREST extends AbstractFacade<Booking> {
 
     @PersistenceContext(unitName = "my_persistence_unit")
@@ -40,18 +35,41 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
     @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public void create(Booking entity) {
+       System.out.println("==============================================");
+        System.out.println("🚀 [DEBUG-FACADE] create() DÉMARRÉ");
         
-        // 1. Rattacher le Passager (User) existant
-        if (entity.getPassengerId() != null && entity.getPassengerId().getId() != null) {
-            User passenger = em.find(User.class, entity.getPassengerId().getId());
-            entity.setPassengerId(passenger);
+        // Inspection de l'objet reçu
+        CarRide cr = entity.getCarRideId();
+        System.out.println("📦 [DEBUG-FACADE] Entité Booking reçue : " + entity);
+        System.out.println("📦 [DEBUG-FACADE] getCarRideId() est null ? : " + (cr == null));
+        
+        if (cr != null) {
+            System.out.println("📦 [DEBUG-FACADE] Contenu CarRide ID: " + cr.getId());
+        } else {
+            System.out.println("❌ [DEBUG-FACADE] ALERTE ROUGE : CarRide est NULL avant même le traitement !");
         }
+        // --- 🔍 LOG DIAGNOSTIC ---
+        if (entity.getDetour() != null) {
+            System.out.println("  ✅ Détour REÇU !");
+            System.out.println("     - Distance: " + entity.getDetour().getDistance());
+            System.out.println("     - Pickup: " + entity.getDetour().getPickupAddress());
+            
+            // Important : Lier le détour au booking pour la cascade JPA
+            // Cela assure que la Foreign Key est bien mise
+            entity.getDetour().setBookingId(entity);
+        } else {
+            System.out.println("  ⚠️ Aucun détour reçu dans l'objet Booking");
+        }
+        // -------------------------
 
-        // 2. Rattacher le Trajet (CarRide) existant
-        // Attention : On utilise bien getCarRideId() (nouveau nom)
+        // Rattachements standards (CarRide, Passenger)
         if (entity.getCarRideId() != null && entity.getCarRideId().getId() != null) {
-            CarRide ride = em.find(CarRide.class, entity.getCarRideId().getId());
-            entity.setCarRideId(ride);
+            System.out.println("🔄 [DEBUG-FACADE] Tentative de rechargement via EntityManager...");
+            entity.setCarRideId(em.find(CarRide.class, entity.getCarRideId().getId()));
+        }
+        if (entity.getPassengerId() != null && entity.getPassengerId().getId() != null) {
+            System.out.println("🚀 [DEBUG-FACADE] Appel super.create(entity)...");
+            entity.setPassengerId(em.find(User.class, entity.getPassengerId().getId()));
         }
 
         super.create(entity);

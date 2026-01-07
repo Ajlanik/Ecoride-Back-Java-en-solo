@@ -71,9 +71,10 @@ public class Booking implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
     
-    // 👇 CORRECTION 1 : Renommé en 'carRideId' pour correspondre au mappedBy de CarRide.java
+    //  CORRECTION : Renommé en 'carRideId' pour correspondre au mappedBy de CarRide.java
     @JoinColumn(name = "ride_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
+    
     private CarRide carRideId; 
     
     @JoinColumn(name = "passenger_id", referencedColumnName = "id")
@@ -154,30 +155,54 @@ public class Booking implements Serializable {
         this.createdAt = createdAt;
     }
 
-    // 👇 CORRECTION 2 : Getter/Setter mis à jour + JsonbTransient
+    // --- RELATION CARRIDE ---
+
     @JsonbTransient
     public CarRide getCarRideId() {
         return carRideId;
     }
 
+    // Setter Standard (pour JPA)
     public void setCarRideId(CarRide carRideId) {
+        System.out.println("🔍 [DEBUG-ENTITY] Setter STANDARD setCarRideId(Object) appelé. Valeur: " + carRideId);
         this.carRideId = carRideId;
     }
+
+    // Setter "Magique" pour JSON (pour Front avec Integer)
+    public void setCarRideId(Integer id) {
+        System.out.println("🔍 [DEBUG-ENTITY] Setter MAGIQUE setCarRideId(Integer) appelé. Valeur: " + id);
+        if (id != null) {
+            this.carRideId = new CarRide(id);
+            System.out.println("   -> Nouveau CarRide créé avec ID: " + this.carRideId.getId());
+        }
+    }
     
-    // Getter virtuel pour le Front (si besoin)
     public Integer getRideIdSimple() {
         return carRideId != null ? carRideId.getId() : null;
     }
 
-    // 👇 CORRECTION 3 : JsonbTransient pour le passager aussi
-    @JsonbTransient
+    // --- RELATION PASSENGER (USER) ---
+
+    //@JsonbTransient
     public User getPassengerId() {
         return passengerId;
     }
 
+    // Setter Standard (pour JPA)
     public void setPassengerId(User passengerId) {
+        System.out.println("🔍 [DEBUG-ENTITY] Setter STANDARD setPassengerId(Object) appelé.");
         this.passengerId = passengerId;
     }
+
+    // Setter "Magique" pour JSON (pour Front avec Integer)
+    public void setPassengerId(Integer id) {
+        System.out.println("🔍 [DEBUG-ENTITY] Setter MAGIQUE setPassengerId(Integer) appelé. Valeur: " + id);
+        if (id != null) {
+            this.passengerId = new User(id);
+        }
+    }
+
+    // --- AUTRES RELATIONS ---
 
     public Detour getDetour() {
         return detour;
@@ -188,7 +213,7 @@ public class Booking implements Serializable {
     }
 
     @XmlTransient
-    @JsonbTransient // Protection boucle
+    @JsonbTransient
     public List<Review> getReviewList() {
         return reviewList;
     }
@@ -220,5 +245,4 @@ public class Booking implements Serializable {
     public String toString() {
         return "entity.Booking[ id=" + id + " ]";
     }
-    
 }
