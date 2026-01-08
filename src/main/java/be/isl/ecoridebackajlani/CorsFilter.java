@@ -16,7 +16,9 @@ public class CorsFilter implements ContainerResponseFilter {
         String path = requestContext.getUriInfo().getPath();
         System.out.println("[DEBUG-BACK] Requête sortante pour : " + path + " - Status: " + responseContext.getStatus());
         // -------------------
-        responseContext.getHeaders().add("Access-Control-Allow-Origin", "*"); // Autorise React (tous les ports)
+        //responseContext.getHeaders().add("Access-Control-Allow-Origin", "*"); // Autorise React (tous les ports)
+        
+        responseContext.getHeaders().add("Access-Control-Allow-Origin", "http://localhost:5173"); 
         responseContext.getHeaders().add("Access-Control-Allow-Credentials", "true");
         responseContext.getHeaders().add("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
         responseContext.getHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
