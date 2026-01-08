@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package entity;
-
+//
 import converter.GeometryConverter;
 import converter.StringListConverter;
 import jakarta.json.bind.annotation.JsonbDateFormat;

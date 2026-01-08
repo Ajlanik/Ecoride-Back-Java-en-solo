@@ -1,9 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package service;
 
+import dto.ReviewDTO;
 import entity.Review;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
@@ -18,11 +15,9 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.stream.Collectors;
+import mapper.ReviewMapper;
 
-/**
- *
- * @author ajlan
- */
 @Stateless
 @Path("reviews")
 public class ReviewFacadeREST extends AbstractFacade<Review> {
@@ -35,17 +30,20 @@ public class ReviewFacadeREST extends AbstractFacade<Review> {
     }
 
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(Review entity) {
+    @Produces(MediaType.APPLICATION_JSON) // On retourne le DTO créé
+    public ReviewDTO createAndReturn(Review entity) {
         super.create(entity);
+        return ReviewMapper.toDTO(entity);
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Integer id, Review entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public ReviewDTO edit(@PathParam("id") Integer id, Review entity) {
         super.edit(entity);
+        return ReviewMapper.toDTO(super.find(id));
     }
 
     @DELETE
@@ -57,34 +55,20 @@ public class ReviewFacadeREST extends AbstractFacade<Review> {
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Review find(@PathParam("id") Integer id) {
-        return super.find(id);
+    public ReviewDTO findDTO(@PathParam("id") Integer id) {
+        return ReviewMapper.toDTO(super.find(id));
     }
 
     @GET
-    @Override
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Review> findAll() {
-        return super.findAll();
-    }
-
-    @GET
-    @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Review> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String countREST() {
-        return String.valueOf(super.count());
+    public List<ReviewDTO> findAllDTO() {
+        return super.findAll().stream()
+                .map(ReviewMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
     }
-    
 }

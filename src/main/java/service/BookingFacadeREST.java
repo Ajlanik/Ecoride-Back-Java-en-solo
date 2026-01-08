@@ -1,25 +1,26 @@
-// service/BookingFacadeREST.java
 package service;
 
+import dto.BookingDTO;
 import entity.Booking;
-import entity.CarRide;
-import entity.User;
-// Pense à importer Detour si tu utilises un objet Detour séparé
-// import entity.Detour; 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.PathParam;
+import java.util.stream.Collectors;
+import mapper.BookingMapper;
 
+/**
+ * Service REST pour la gestion des réservations utilisant les DTO.
+ */
 @Stateless
 @Path("bookings")
 public class BookingFacadeREST extends AbstractFacade<Booking> {
@@ -31,72 +32,27 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
         super(Booking.class);
     }
 
+    /**
+     * Crée une nouvelle réservation et retourne son DTO.
+     */
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(Booking entity) {
-       System.out.println("==============================================");
-        System.out.println("🚀 [DEBUG-FACADE] create() DÉMARRÉ");
-        
-        // Inspection de l'objet reçu
-        CarRide cr = entity.getCarRideId();
-        System.out.println("📦 [DEBUG-FACADE] Entité Booking reçue : " + entity);
-        System.out.println("📦 [DEBUG-FACADE] getCarRideId() est null ? : " + (cr == null));
-        
-        if (cr != null) {
-            System.out.println("📦 [DEBUG-FACADE] Contenu CarRide ID: " + cr.getId());
-        } else {
-            System.out.println("❌ [DEBUG-FACADE] ALERTE ROUGE : CarRide est NULL avant même le traitement !");
-        }
-        // --- 🔍 LOG DIAGNOSTIC ---
-        if (entity.getDetour() != null) {
-            System.out.println("  ✅ Détour REÇU !");
-            System.out.println("     - Distance: " + entity.getDetour().getDistance());
-            System.out.println("     - Pickup: " + entity.getDetour().getPickupAddress());
-            
-            // Important : Lier le détour au booking pour la cascade JPA
-            // Cela assure que la Foreign Key est bien mise
-            entity.getDetour().setBookingId(entity);
-        } else {
-            System.out.println("  ⚠️ Aucun détour reçu dans l'objet Booking");
-        }
-        // -------------------------
-
-        // Rattachements standards (CarRide, Passenger)
-        if (entity.getCarRideId() != null && entity.getCarRideId().getId() != null) {
-            System.out.println("🔄 [DEBUG-FACADE] Tentative de rechargement via EntityManager...");
-            entity.setCarRideId(em.find(CarRide.class, entity.getCarRideId().getId()));
-        }
-        if (entity.getPassengerId() != null && entity.getPassengerId().getId() != null) {
-            System.out.println("🚀 [DEBUG-FACADE] Appel super.create(entity)...");
-            entity.setPassengerId(em.find(User.class, entity.getPassengerId().getId()));
-        }
-
+    @Produces(MediaType.APPLICATION_JSON)
+    public BookingDTO createAndReturn(Booking entity) {
         super.create(entity);
+        return BookingMapper.toDTO(entity);
     }
 
+    /**
+     * Modifie une réservation et retourne le DTO mis à jour.
+     */
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Integer id, Booking entity) {
-        // Logique de mise à jour sécurisée (comme pour les voitures)
-        
-        Booking existingBooking = super.find(id);
-        if (existingBooking == null) return;
-        
-        // Mise à jour des champs simples
-        if (entity.getSeats() != 0) existingBooking.setSeats(entity.getSeats());
-        if (entity.getPrice() != null) existingBooking.setPrice(entity.getPrice());
-        if (entity.getStatus() != null) existingBooking.setStatus(entity.getStatus());
-        if (entity.getCommission() != null) existingBooking.setCommission(entity.getCommission());
-        if (entity.getTotalPaid() != null) existingBooking.setTotalPaid(entity.getTotalPaid());
-
-        // Mise à jour des relations (si nécessaire)
-        if (entity.getCarRideId() != null && entity.getCarRideId().getId() != null) {
-             existingBooking.setCarRideId(em.find(CarRide.class, entity.getCarRideId().getId()));
-        }
-        
-        super.edit(existingBooking);
+    @Produces(MediaType.APPLICATION_JSON)
+    public BookingDTO edit(@PathParam("id") Integer id, Booking entity) {
+        super.edit(entity);
+        return BookingMapper.toDTO(super.find(id));
     }
 
     @DELETE
@@ -105,37 +61,29 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
         super.remove(super.find(id));
     }
 
+    /**
+     * Recherche une réservation par ID et retourne son DTO.
+     */
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Booking find(@PathParam("id") Integer id) {
-        return super.find(id);
+    public BookingDTO findDTO(@PathParam("id") Integer id) {
+        return BookingMapper.toDTO(super.find(id));
     }
 
+    /**
+     * Retourne la liste de toutes les réservations sous forme de DTO.
+     */
     @GET
-    @Override
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Booking> findAll() {
-        return super.findAll();
-    }
-
-    @GET
-    @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Booking> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String countREST() {
-        return String.valueOf(super.count());
+    public List<BookingDTO> findAllDTO() {
+        return super.findAll().stream()
+                .map(BookingMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
     }
-    
 }

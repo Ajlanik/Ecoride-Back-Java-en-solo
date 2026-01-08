@@ -1,9 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package service;
 
+import dto.DetourDTO;
 import entity.Detour;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
@@ -18,13 +15,11 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.stream.Collectors;
+import mapper.DetourMapper;
 
-/**
- *
- * @author ajlan
- */
 @Stateless
-@Path("entity.detour")
+@Path("detours")
 public class DetourFacadeREST extends AbstractFacade<Detour> {
 
     @PersistenceContext(unitName = "my_persistence_unit")
@@ -35,17 +30,20 @@ public class DetourFacadeREST extends AbstractFacade<Detour> {
     }
 
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(Detour entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public DetourDTO createAndReturn(Detour entity) {
         super.create(entity);
+        return DetourMapper.toDTO(entity);
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Integer id, Detour entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public DetourDTO edit(@PathParam("id") Integer id, Detour entity) {
         super.edit(entity);
+        return DetourMapper.toDTO(super.find(id));
     }
 
     @DELETE
@@ -57,34 +55,20 @@ public class DetourFacadeREST extends AbstractFacade<Detour> {
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Detour find(@PathParam("id") Integer id) {
-        return super.find(id);
+    public DetourDTO findDTO(@PathParam("id") Integer id) {
+        return DetourMapper.toDTO(super.find(id));
     }
 
     @GET
-    @Override
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Detour> findAll() {
-        return super.findAll();
-    }
-
-    @GET
-    @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Detour> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String countREST() {
-        return String.valueOf(super.count());
+    public List<DetourDTO> findAllDTO() {
+        return super.findAll().stream()
+                .map(DetourMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
     }
-    
 }

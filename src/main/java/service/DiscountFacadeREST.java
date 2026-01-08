@@ -1,9 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package service;
 
+import dto.DiscountDTO;
 import entity.Discount;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
@@ -18,13 +15,11 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.stream.Collectors;
+import mapper.DiscountMapper;
 
-/**
- *
- * @author ajlan
- */
 @Stateless
-@Path("entity.discount")
+@Path("discounts")
 public class DiscountFacadeREST extends AbstractFacade<Discount> {
 
     @PersistenceContext(unitName = "my_persistence_unit")
@@ -35,17 +30,20 @@ public class DiscountFacadeREST extends AbstractFacade<Discount> {
     }
 
     @POST
-    @Override
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void create(Discount entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public DiscountDTO createAndReturn(Discount entity) {
         super.create(entity);
+        return DiscountMapper.toDTO(entity);
     }
 
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public void edit(@PathParam("id") Integer id, Discount entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public DiscountDTO edit(@PathParam("id") Integer id, Discount entity) {
         super.edit(entity);
+        return DiscountMapper.toDTO(super.find(id));
     }
 
     @DELETE
@@ -57,34 +55,20 @@ public class DiscountFacadeREST extends AbstractFacade<Discount> {
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public Discount find(@PathParam("id") Integer id) {
-        return super.find(id);
+    public DiscountDTO findDTO(@PathParam("id") Integer id) {
+        return DiscountMapper.toDTO(super.find(id));
     }
 
     @GET
-    @Override
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Discount> findAll() {
-        return super.findAll();
-    }
-
-    @GET
-    @Path("{from}/{to}")
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<Discount> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-        return super.findRange(new int[]{from, to});
-    }
-
-    @GET
-    @Path("count")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String countREST() {
-        return String.valueOf(super.count());
+    public List<DiscountDTO> findAllDTO() {
+        return super.findAll().stream()
+                .map(DiscountMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
     }
-    
 }
