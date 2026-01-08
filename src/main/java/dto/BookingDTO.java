@@ -4,10 +4,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
-/**
- * Objet de transfert de données pour l'entité Booking.
- * Évite les cycles de sérialisation entre le trajet et le passager.
- */
 public class BookingDTO implements Serializable {
 
     private Integer id;
@@ -17,8 +13,14 @@ public class BookingDTO implements Serializable {
     private BigDecimal totalPaid;
     private String status;
     private Date createdAt;
-    private Integer carRideId; // Uniquement l'ID pour simplifier le lien
-    private Integer passengerId; // Uniquement l'ID du passager
+
+    // Pour l'écriture (création)
+    private Integer carRideId;
+    private Integer passengerId;
+
+    // Pour la lecture (affichage)
+    private CarRideDTO carRide;
+    private DetourDTO detour;
 
     public BookingDTO() {
     }
@@ -94,5 +96,22 @@ public class BookingDTO implements Serializable {
 
     public void setPassengerId(Integer passengerId) {
         this.passengerId = passengerId;
+    }
+
+    // NOUVEAU : Getter/Setter pour l'objet complet
+    public CarRideDTO getCarRide() {
+        return carRide;
+    }
+
+    public void setCarRide(CarRideDTO carRide) {
+        this.carRide = carRide;
+    }
+
+    public DetourDTO getDetour() {
+        return detour;
+    }
+
+    public void setDetour(DetourDTO detour) {
+        this.detour = detour;
     }
 }

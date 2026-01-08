@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import jakarta.xml.bind.annotation.XmlTransient; // 👈 Import indispensable
 
 public class CarRideDTO implements Serializable {
 
@@ -30,14 +31,15 @@ public class CarRideDTO implements Serializable {
     private BigDecimal endLat;
     private BigDecimal endLon;
 
-    // Relations complètes (pour affichage direct)
+    // Relations complètes
     private UserDTO driver;
     private CarDTO car;
 
     public CarRideDTO() {
     }
 
-    // --- Getters et Setters ---
+    // Getters et Setters
+
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -80,6 +82,10 @@ public class CarRideDTO implements Serializable {
     public Boolean getIsRecurring() { return isRecurring; }
     public void setIsRecurring(Boolean isRecurring) { this.isRecurring = isRecurring; }
 
+    // 🔴 C'EST ICI QUE SE FAIT LA CORRECTION
+    // On ajoute @XmlTransient pour que JAXB ignore ce champ complexe (List de List)
+    // Cela corrige l'erreur "java.util.List est une interface..."
+    @XmlTransient 
     public List<List<Double>> getGeometry() { return geometry; }
     public void setGeometry(List<List<Double>> geometry) { this.geometry = geometry; }
 

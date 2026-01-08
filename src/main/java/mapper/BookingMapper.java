@@ -5,14 +5,8 @@ import entity.Booking;
 import entity.CarRide;
 import entity.User;
 
-/**
- * Classe utilitaire pour convertir les entités Booking en DTO et inversement.
- */
 public class BookingMapper {
 
-    /**
-     * Convertit une entité Booking vers un BookingDTO.
-     */
     public static BookingDTO toDTO(Booking booking) {
         if (booking == null) {
             return null;
@@ -26,20 +20,24 @@ public class BookingMapper {
         dto.setStatus(booking.getStatus());
         dto.setCreatedAt(booking.getCreatedAt());
 
-        // Extraction des IDs des relations
+        // ID simple (toujours utile)
         if (booking.getCarRideId() != null) {
             dto.setCarRideId(booking.getCarRideId().getId());
+            // NOUVEAU : On ajoute l'objet complet pour l'affichage
+            dto.setCarRide(CarRideMapper.toDTO(booking.getCarRideId()));
         }
+        
         if (booking.getPassengerId() != null) {
             dto.setPassengerId(booking.getPassengerId().getId());
+        }
+        
+        if (booking.getDetour() != null) {
+            dto.setDetour(DetourMapper.toDTO(booking.getDetour()));
         }
         
         return dto;
     }
 
-    /**
-     * Convertit un BookingDTO vers une entité Booking.
-     */
     public static Booking toEntity(BookingDTO dto) {
         if (dto == null) {
             return null;
@@ -53,7 +51,7 @@ public class BookingMapper {
         booking.setStatus(dto.getStatus());
         booking.setCreatedAt(dto.getCreatedAt());
 
-        // Reconstruction des objets liés par ID (objets partiels pour JPA)
+        // Pour la création, on utilise l'ID
         if (dto.getCarRideId() != null) {
             booking.setCarRideId(new CarRide(dto.getCarRideId()));
         }
