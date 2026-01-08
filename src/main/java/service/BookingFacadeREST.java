@@ -45,7 +45,6 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
     @Produces(MediaType.APPLICATION_JSON)
     public BookingDTO createAndReturn(BookingDTO dto, @Context SecurityContext securityContext) {
         
-        // 1. Sécurité
         if (securityContext.getUserPrincipal() == null) {
             throw new WebApplicationException("Non autorisé", Response.Status.UNAUTHORIZED);
         }
@@ -63,35 +62,24 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
             throw new WebApplicationException("Trajet introuvable", Response.Status.NOT_FOUND);
         }
 
-        // 2. Création de l'entité Booking
         Booking entity = new Booking();
         entity.setSeats(dto.getSeats() > 0 ? dto.getSeats() : 1);
         entity.setPrice(dto.getPrice());
-        
-        // CORRECTION : On sauvegarde enfin la commission et le total
         entity.setCommission(dto.getCommission());
         entity.setTotalPaid(dto.getTotalPaid());
-        
         entity.setStatus("PENDING");
         entity.setCreatedAt(new Date());
         
         entity.setPassengerId(passenger);
         entity.setCarRideId(ride);
 
-        // 3. Gestion du Détour (Relation OneToOne)
         if (dto.getDetour() != null) {
-            // Conversion DTO -> Entity
             Detour detourEntity = DetourMapper.toEntity(dto.getDetour());
-            
-            // Liaison bidirectionnelle pour que JPA comprenne (surtout le Cascade)
-            detourEntity.setBookingId(entity); // L'enfant connait le parent
-            entity.setDetour(detourEntity);    // Le parent connait l'enfant (Cascade.ALL fera le persist)
+            detourEntity.setBookingId(entity); 
+            entity.setDetour(detourEntity);    
         }
 
-        // 4. Sauvegarde (Le Cascade.ALL sur 'detour' va sauvegarder le détour automatiquement)
         super.create(entity);
-        
-        // 5. Retour
         return BookingMapper.toDTO(entity);
     }
 
@@ -106,8 +94,6 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
         if (dto.getStatus() != null) {
             entity.setStatus(dto.getStatus());
         }
-        // On pourrait ajouter la mise à jour des autres champs ici si nécessaire
-        
         super.edit(entity);
         return BookingMapper.toDTO(entity);
     }
@@ -125,21 +111,35 @@ public class BookingFacadeREST extends AbstractFacade<Booking> {
         return BookingMapper.toDTO(super.find(id));
     }
 
+    /**
+     * ✅ VERSION SÉCURISÉE FINALE
+     * Filtre les réservations selon l'utilisateur connecté.
+     * Renvoie :
+     * 1. Les réservations où je suis le PASSAGER.
+     * 2. Les réservations sur les trajets où je suis le CONDUCTEUR.
+     */
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    public List<BookingDTO> findAllDTO(@QueryParam("passengerId") Integer passengerId, @Context SecurityContext securityContext) {
-        List<Booking> bookings;
+    public List<BookingDTO> findAllDTO(@Context SecurityContext securityContext) {
         
-        // Filtrage simple pour que "Mes réservations" fonctionne mieux
-        if (passengerId != null) {
-             TypedQuery<Booking> query = em.createQuery("SELECT b FROM Booking b WHERE b.passengerId.id = :pid", Booking.class);
-             query.setParameter("pid", passengerId);
-             bookings = query.getResultList();
-        } else {
-            bookings = super.findAll();
+        // Sécurité : si pas de token, on renvoie vide
+        if (securityContext.getUserPrincipal() == null) {
+            return List.of(); 
         }
 
-        return bookings.stream()
+        String email = securityContext.getUserPrincipal().getName();
+
+        // La requête magique avec le OR
+        TypedQuery<Booking> query = em.createQuery(
+            "SELECT b FROM Booking b " +
+            "WHERE b.passengerId.email = :email " + 
+            "OR b.carRideId.driver.email = :email", 
+            Booking.class
+        );
+        
+        query.setParameter("email", email);
+
+        return query.getResultList().stream()
                 .map(BookingMapper::toDTO)
                 .collect(Collectors.toList());
     }
