@@ -14,6 +14,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import mapper.ReviewMapper;
@@ -31,12 +32,25 @@ public class ReviewFacadeREST extends AbstractFacade<Review> {
 
     @POST
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-    @Produces(MediaType.APPLICATION_JSON) // On retourne le DTO créé
-    public ReviewDTO createAndReturn(Review entity) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public ReviewDTO createAndReturn(ReviewDTO dto) { // 👈 On accepte le DTO
+        
+        // 1. Conversion DTO -> Entity (Le Mapper gère les IDs)
+        Review entity = ReviewMapper.toEntity(dto);
+        
+        // 2. Gestion de la date si absente
+        if (entity.getCreatedAt() == null) {
+            entity.setCreatedAt(new Date());
+        }
+
+        // 3. Persistance
         super.create(entity);
+        
+        // 4. Retourne le DTO (avec l'ID généré)
         return ReviewMapper.toDTO(entity);
     }
 
+    // ... le reste du fichier reste identique (edit, remove, findDTO...)
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

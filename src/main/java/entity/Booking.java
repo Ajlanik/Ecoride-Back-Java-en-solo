@@ -70,6 +70,8 @@ public class Booking implements Serializable {
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
+    @Column(name = "stripe_payment_intent_id")
+private String stripePaymentIntentId;
     
     //  CORRECTION : Renommé en 'carRideId' pour correspondre au mappedBy de CarRide.java
     @JoinColumn(name = "ride_id", referencedColumnName = "id")
@@ -222,6 +224,18 @@ public class Booking implements Serializable {
         this.reviewList = reviewList;
     }
 
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+
+    
+    
+    
+    
     @Override
     public int hashCode() {
         int hash = 0;

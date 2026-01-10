@@ -21,3 +21,4 @@ Thumbs.db
 
 # Sécurité
 src/main/webapp/WEB-INF/glassfish-resources.xml
+src/main/resources/config.properties

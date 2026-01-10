@@ -4,7 +4,7 @@
              version="3.0" xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
     <!-- Define Persistence Unit -->          
     <persistence-unit name="my_persistence_unit" transaction-type="JTA">                 
-        <jta-data-source>java:app/dbAkn2025</jta-data-source>       
+        <jta-data-source>jdbc/ecoride</jta-data-source>     
         <exclude-unlisted-classes>false</exclude-unlisted-classes>       
         <properties>
             <property name="jakarta.persistence.schema-generation.database.action" value="none"/>

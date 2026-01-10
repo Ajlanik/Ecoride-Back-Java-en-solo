@@ -22,6 +22,10 @@ public class BookingDTO implements Serializable {
     private CarRideDTO carRide;
     private DetourDTO detour;
 
+    private boolean hasAuthUserRated;
+
+    private String stripePaymentIntentId;
+
     public BookingDTO() {
     }
 
@@ -114,4 +118,22 @@ public class BookingDTO implements Serializable {
     public void setDetour(DetourDTO detour) {
         this.detour = detour;
     }
+
+    public boolean isHasAuthUserRated() {
+        return hasAuthUserRated;
+    }
+
+    public void setHasAuthUserRated(boolean hasAuthUserRated) {
+        this.hasAuthUserRated = hasAuthUserRated;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+    
+    
 }

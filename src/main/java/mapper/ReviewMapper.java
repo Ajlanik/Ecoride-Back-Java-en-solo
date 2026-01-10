@@ -3,6 +3,7 @@ package mapper;
 import dto.ReviewDTO;
 import entity.Booking;
 import entity.Review;
+import entity.User; // N'oublie pas cet import
 
 public class ReviewMapper {
 
@@ -22,9 +23,12 @@ public class ReviewMapper {
         }
         if (review.getAuthorId() != null) {
             dto.setAuthor(UserMapper.toDTO(review.getAuthorId()));
+            // On peut aussi remplir l'ID simple pour info
+            dto.setAuthorUserId(review.getAuthorId().getId());
         }
         if (review.getTargetId() != null) {
             dto.setTarget(UserMapper.toDTO(review.getTargetId()));
+            dto.setTargetUserId(review.getTargetId().getId());
         }
 
         return dto;
@@ -41,14 +45,23 @@ public class ReviewMapper {
         review.setRole(dto.getRole());
         review.setCreatedAt(dto.getCreatedAt());
 
+        // Mapping Booking (ID)
         if (dto.getBookingId() != null) {
             review.setBookingId(new Booking(dto.getBookingId()));
         }
+        
+        // Mapping Author (Priorité à l'objet, sinon l'ID simple)
         if (dto.getAuthor() != null) {
             review.setAuthorId(UserMapper.toEntity(dto.getAuthor()));
+        } else if (dto.getAuthorUserId() != null) {
+            review.setAuthorId(new User(dto.getAuthorUserId()));
         }
+
+        // Mapping Target (Priorité à l'objet, sinon l'ID simple)
         if (dto.getTarget() != null) {
             review.setTargetId(UserMapper.toEntity(dto.getTarget()));
+        } else if (dto.getTargetUserId() != null) {
+            review.setTargetId(new User(dto.getTargetUserId()));
         }
 
         return review;
