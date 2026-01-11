@@ -4,6 +4,7 @@
  */
 package entity;
 //
+
 import converter.GeometryConverter;
 import converter.StringListConverter;
 import jakarta.json.bind.annotation.JsonbDateFormat;
@@ -21,6 +22,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -147,6 +150,10 @@ public class CarRide implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     private Date createdAt;
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss") 
+    private Date updatedAt;
 
     @Column(name = "recurrence_days")
     @Convert(converter = StringListConverter.class)
@@ -176,6 +183,17 @@ public class CarRide implements Serializable {
         this.id = id;
     }
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
+    }
+    
     // --- GETTERS & SETTERS ---
     public Integer getId() {
         return id;
@@ -358,7 +376,7 @@ public class CarRide implements Serializable {
     }
 
     @XmlTransient
-    
+
     public List<Booking> getBookingList() {
         return bookingList;
     }
@@ -391,6 +409,18 @@ public class CarRide implements Serializable {
         return driver != null ? driver.getId() : null;
     }
 
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    
+    
+    
+    
     @Override
     public int hashCode() {
         int hash = 0;
@@ -431,7 +461,7 @@ public class CarRide implements Serializable {
 
     // --- GÉOMÉTRIE JTS <-> JSON ---
     // Cette méthode est utilisée par le mapper JSON pour exposer "geometry" au frontend
-    @XmlTransient 
+    @XmlTransient
     public List<List<Double>> getGeometry() {
         if (this.routePath == null) {
             return null;

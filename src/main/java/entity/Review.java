@@ -4,6 +4,7 @@
  */
 package entity;
 
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -57,9 +60,16 @@ public class Review implements Serializable {
     @Size(min = 1, max = 20)
     @Column(name = "role")
     private String role;
+
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     private Date createdAt;
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    private Date updatedAt;
+
     @JoinColumn(name = "booking_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Booking bookingId;
@@ -81,6 +91,16 @@ public class Review implements Serializable {
         this.id = id;
         this.rating = rating;
         this.role = role;
+    }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
     }
 
     public Integer getId() {
@@ -171,9 +191,8 @@ public class Review implements Serializable {
     public String toString() {
         return "entity.Review[ id=" + id + " ]";
     }
-    
-    // --- SETTERS MAGIQUES POUR LE JSON ---
 
+    // --- SETTERS MAGIQUES POUR LE JSON ---
     // Permet de mapper "bookingId": 23 (entier) vers l'objet Booking
     public void setBookingId(Integer id) {
         if (id != null) {
@@ -188,7 +207,7 @@ public class Review implements Serializable {
             this.authorId = new User(id);
         }
     }
-    
+
     // Alias pour le front qui envoie "authorUserId"
     public void setAuthorUserId(Integer id) {
         setAuthorId(id);
@@ -200,10 +219,20 @@ public class Review implements Serializable {
             this.targetId = new User(id);
         }
     }
-    
+
     // Alias pour le front qui envoie "targetUserId"
     public void setTargetUserId(Integer id) {
         setTargetId(id);
     }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
     
+    
+
 }

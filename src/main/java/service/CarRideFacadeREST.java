@@ -53,11 +53,11 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
         System.out.println("  - Depart: " + entity.getDeparturePlace());
         System.out.println("  - Arrivee: " + entity.getArrivalPlace());
         
-        // --- 🔍 LOG DIAGNOSTIC ---
+        // ---  LOG DIAGNOSTIC ---
         if (entity.getRoutePath() != null) {
-            System.out.println("  ✅ RoutePath généré (succès) : " + entity.getRoutePath().toString().substring(0, Math.min(50, entity.getRoutePath().toString().length())) + "...");
+            System.out.println("  RoutePath généré (succès) : " + entity.getRoutePath().toString().substring(0, Math.min(50, entity.getRoutePath().toString().length())) + "...");
         } else {
-            System.out.println("  ❌ RoutePath est NULL");
+            System.out.println("  RoutePath est NULL");
         }
         // -------------------------
 
@@ -73,7 +73,7 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
         super.create(entity);
     }
 
-    // ... (Le reste du fichier reste IDENTIQUE à votre version fournie)
+
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

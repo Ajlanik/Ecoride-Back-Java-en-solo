@@ -17,6 +17,8 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -112,14 +114,18 @@ public class User implements Serializable {
     private Boolean isActive;
     @Column(name = "is_verified")
     private Boolean isVerified;
+    
+    
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss") // 👈 Format Timestamp
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     private Date createdAt;
     @Column(name = "updated_at")
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss") // 👈 Format Timestamp
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss") 
     private Date updatedAt;
+    
+    
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "passengerId")
     private List<Booking> bookingList;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
@@ -145,6 +151,16 @@ public class User implements Serializable {
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
     }
 
     public Integer getId() {
@@ -334,6 +350,8 @@ public class User implements Serializable {
         this.rideList = rideList;
     }
 
+    
+    
     @Override
     public int hashCode() {
         int hash = 0;

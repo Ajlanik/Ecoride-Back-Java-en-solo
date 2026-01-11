@@ -21,6 +21,8 @@ public class BookingDTO implements Serializable {
     // Pour la lecture (affichage)
     private CarRideDTO carRide;
     private DetourDTO detour;
+    
+    private UserDTO passenger;
 
     private boolean hasAuthUserRated;
 
@@ -133,6 +135,14 @@ public class BookingDTO implements Serializable {
 
     public void setStripePaymentIntentId(String stripePaymentIntentId) {
         this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+
+    public UserDTO getPassenger() {
+        return passenger;
+    }
+
+    public void setPassenger(UserDTO passenger) {
+        this.passenger = passenger;
     }
     
     

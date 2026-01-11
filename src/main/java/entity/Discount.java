@@ -4,6 +4,7 @@
  */
 package entity;
 
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -59,6 +62,15 @@ public class Discount implements Serializable {
     @Temporal(TemporalType.TIMESTAMP)
     private Date expiresAt;
 
+    @Column(name = "created_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    private Date createdAt;
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    private Date updatedAt;
+
     public Discount() {
     }
 
@@ -70,6 +82,17 @@ public class Discount implements Serializable {
         this.id = id;
         this.code = code;
         this.percentage = percentage;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
     }
 
     public Integer getId() {
@@ -112,6 +135,25 @@ public class Discount implements Serializable {
         this.expiresAt = expiresAt;
     }
 
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+    
+    
+    
+
     @Override
     public int hashCode() {
         int hash = 0;
@@ -136,5 +178,5 @@ public class Discount implements Serializable {
     public String toString() {
         return "entity.Discount[ id=" + id + " ]";
     }
-    
+
 }

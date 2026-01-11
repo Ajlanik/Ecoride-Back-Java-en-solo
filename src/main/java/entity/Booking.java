@@ -4,6 +4,7 @@
  */
 package entity;
 
+import jakarta.json.bind.annotation.JsonbDateFormat;
 import jakarta.json.bind.annotation.JsonbTransient; // 👈 Import indispensable
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
@@ -18,6 +19,8 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -67,11 +70,20 @@ public class Booking implements Serializable {
     @Size(max = 20)
     @Column(name = "status")
     private String status;
+    
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     private Date createdAt;
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss") 
+    private Date updatedAt;
+    
+    
     @Column(name = "stripe_payment_intent_id")
 private String stripePaymentIntentId;
+    
     
     //  CORRECTION : Renommé en 'carRideId' pour correspondre au mappedBy de CarRide.java
     @JoinColumn(name = "ride_id", referencedColumnName = "id")
@@ -99,6 +111,17 @@ private String stripePaymentIntentId;
     public Booking(Integer id, int seats) {
         this.id = id;
         this.seats = seats;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
     }
 
     public Integer getId() {
@@ -230,6 +253,14 @@ private String stripePaymentIntentId;
 
     public void setStripePaymentIntentId(String stripePaymentIntentId) {
         this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     

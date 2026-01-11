@@ -35,6 +35,13 @@ public class BookingMapper {
             dto.setDetour(DetourMapper.toDTO(booking.getDetour()));
         }
         
+        if (booking.getPassengerId() != null) {
+        dto.setPassengerId(booking.getPassengerId().getId()); 
+        
+
+        dto.setPassenger(UserMapper.toDTO(booking.getPassengerId()));
+    }
+        
         return dto;
     }
 

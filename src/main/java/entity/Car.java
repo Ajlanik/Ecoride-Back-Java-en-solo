@@ -18,6 +18,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -85,9 +87,16 @@ public class Car implements Serializable {
     private String picture;
     @Column(name = "is_active")
     private Boolean isActive;
+
     @Column(name = "created_at")
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
     private Date createdAt;
+    @Column(name = "updated_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+    private Date updatedAt;
+
     @Column(name = "purchase_date")
     @JsonbDateFormat("yyyy-MM-dd")
     private LocalDate purchaseDate;
@@ -118,6 +127,17 @@ public class Car implements Serializable {
         this.model = model;
         this.licensePlate = licensePlate;
         this.numberOfSeat = numberOfSeat;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = new Date();
+        updatedAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = new Date();
     }
 
     public Integer getId() {
@@ -210,6 +230,18 @@ public class Car implements Serializable {
         this.rideList = rideList;
     }
 
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    
+    
+    
+    
     @Override
     public int hashCode() {
         int hash = 0;
