@@ -53,7 +53,7 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
         System.out.println("  - Depart: " + entity.getDeparturePlace());
         System.out.println("  - Arrivee: " + entity.getArrivalPlace());
         
-        // ---  LOG DIAGNOSTIC ---
+        // --- LOG DIAGNOSTIC ---
         if (entity.getRoutePath() != null) {
             System.out.println("  RoutePath généré (succès) : " + entity.getRoutePath().toString().substring(0, Math.min(50, entity.getRoutePath().toString().length())) + "...");
         } else {
