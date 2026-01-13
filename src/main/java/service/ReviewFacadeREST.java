@@ -2,6 +2,7 @@ package service;
 
 import dto.ReviewDTO;
 import entity.Review;
+import entity.User;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -34,23 +35,60 @@ public class ReviewFacadeREST extends AbstractFacade<Review> {
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     @Produces(MediaType.APPLICATION_JSON)
     public ReviewDTO createAndReturn(ReviewDTO dto) { // 👈 On accepte le DTO
-        
-        // 1. Conversion DTO -> Entity (Le Mapper gère les IDs)
+
+        // Conversion DTO -> Entity (Le Mapper gère les IDs)
         Review entity = ReviewMapper.toEntity(dto);
-        
-        // 2. Gestion de la date si absente
+
+        // Gestion de la date si absente
         if (entity.getCreatedAt() == null) {
             entity.setCreatedAt(new Date());
         }
 
-        // 3. Persistance
+        // Persistance
         super.create(entity);
-        
-        // 4. Retourne le DTO (avec l'ID généré)
+
+        updateUserRating(entity.getTargetId());
+
+        // Retourne le DTO (avec l'ID)
         return ReviewMapper.toDTO(entity);
     }
 
-    // ... le reste du fichier reste identique (edit, remove, findDTO...)
+    private void updateUserRating(User targetUser) {
+        if (targetUser == null) {
+            return;
+        }
+
+        try {
+            // Calculer la moyenne via SQL (c'est très rapide)
+            Double average = em.createQuery("SELECT AVG(r.rating) FROM Review r WHERE r.targetId = :user", Double.class)
+                    .setParameter("user", targetUser)
+                    .getSingleResult();
+
+            // Gérer le cas null (pas d'avis, peu probable ici car on vient d'en ajouter un)
+            if (average == null) {
+                average = 5.0;
+            }
+
+            // Arrondir à 1 décimale
+            double roundedRating = Math.round(average * 10.0) / 10.0;
+
+            // Mettre à jour l'utilisateur
+
+            User userToUpdate = em.find(User.class, targetUser.getId());
+            userToUpdate.setRating(roundedRating);
+
+            // Sauvegarder
+            em.merge(userToUpdate);
+
+            System.out.println("Note mise à jour pour " + userToUpdate.getEmail() + " : " + roundedRating);
+
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la mise à jour du rating : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
     @PUT
     @Path("{id}")
     @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

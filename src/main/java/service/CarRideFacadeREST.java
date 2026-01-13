@@ -114,24 +114,24 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
         CarRide ride = super.find(id);
         
         if (ride != null) {
-            // --- AJOUT CRITIQUE POUR FORCER LA RELECTURE DB ---
+
             try {
-                em.refresh(ride); // <--- C'est la commande magique !
-                System.out.println("   🔄 Cache invalidé, données fraîches rechargées depuis la DB.");
+                em.refresh(ride); // 
+                System.out.println("  Cache non valide !!!!!, données fraiches rechargées depuis la DB.");
             } catch (Exception e) {
-                System.out.println("   ⚠️ Impossible de rafraîchir l'entité : " + e.getMessage());
+                System.out.println("  Impossible de rafraichir l'entité : " + e.getMessage());
             }
             // --------------------------------------------------
 
-            System.out.println("   ✅ Trajet trouvé (ID=" + ride.getId() + ")");
-            System.out.println("   📍 DB StartLat : " + ride.getStartLat());
-            System.out.println("   📍 DB StartLon : " + ride.getStartLon());
-            System.out.println("   📍 DB EndLat   : " + ride.getEndLat());
+            System.out.println(" Trajet trouvé (ID=" + ride.getId() + ")");
+            System.out.println(" DB StartLat : " + ride.getStartLat());
+            System.out.println(" DB StartLon : " + ride.getStartLon());
+            System.out.println(" DB EndLat   : " + ride.getEndLat());
             
             boolean hasGeo = (ride.getRoutePath() != null);
-            System.out.println("   🗺️ RoutePath   : " + (hasGeo ? "PRÉSENT" : "NULL"));
+            System.out.println(" RoutePath   : " + (hasGeo ? "PRESENT" : "NULL"));
         } else {
-            System.out.println("   ❌ Trajet introuvable !");
+            System.out.println(" Trajet introuvable !");
         }
         
         return ride;
@@ -142,17 +142,34 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
     public List<CarRide> findAll(
             @QueryParam("driverId") Integer driverId,
             @QueryParam("departure") String departure,
-            @QueryParam("arrival") String arrival) {
+            @QueryParam("arrival") String arrival,
+            @QueryParam("departureDate") String departureDateStr) { // AJOUT DU PARAMETRE
         
         StringBuilder jpql = new StringBuilder("SELECT c FROM CarRide c WHERE 1=1");
+        
+        // Construction dynamique de la requête
         if (driverId != null) jpql.append(" AND c.driver.id = :driverId");
         if (departure != null && !departure.isEmpty()) jpql.append(" AND c.departurePlace LIKE :dep");
         if (arrival != null && !arrival.isEmpty()) jpql.append(" AND c.arrivalPlace LIKE :arr");
         
+        // AJOUT DE LA CONDITION DATE
+        if (departureDateStr != null && !departureDateStr.isEmpty()) {
+            jpql.append(" AND c.departureDate = :date");
+        }
+        
+        // Création de la query
         TypedQuery<CarRide> query = em.createQuery(jpql.toString(), CarRide.class);
+        
+        // Injection des paramètres
         if (driverId != null) query.setParameter("driverId", driverId);
         if (departure != null && !departure.isEmpty()) query.setParameter("dep", "%" + departure + "%");
         if (arrival != null && !arrival.isEmpty()) query.setParameter("arr", "%" + arrival + "%");
+        
+        // CONVERSION ET INJECTION DE LA DATE
+        if (departureDateStr != null && !departureDateStr.isEmpty()) {
+            // LocalDate.parse("2025-01-30") fonctionne nativement avec le format standard YYYY-MM-DD
+            query.setParameter("date", java.time.LocalDate.parse(departureDateStr));
+        }
         
         return query.getResultList();
     }

@@ -1,6 +1,9 @@
 package service;
 
 import dto.UserDTO;
+import dto.UserStatsDTO;
+import entity.Booking;
+import entity.CarRide;
 import entity.User;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
@@ -141,7 +144,80 @@ public class UserFacadeREST extends AbstractFacade<User> {
     public String countREST() {
         return String.valueOf(super.count());
     }
+    
+ @GET
+    @Path("{id}/stats")
+    @Produces(MediaType.APPLICATION_JSON)
+    public UserStatsDTO getUserStats(@PathParam("id") Integer id) {
+        User user = super.find(id);
+        if (user == null) {
+            return new UserStatsDTO(0.0, 0, 0.0, 0);
+        }
 
+        // Récupération de la note (directement depuis la colonne stockée)
+        double finalRating = (user.getRating() != null) ? user.getRating() : 5.0;
+
+        // Initialisation des compteurs
+        double totalKm = 0.0;
+        int completedRidesCount = 0;
+
+        
+        
+        //---------------- Faudrait stocker ca dans la db non ??-----------------------
+        // Calcul pour les trajets où il est CONDUCTEUR
+        if (user.getRideList() != null) {
+            for (entity.CarRide ride : user.getRideList()) {
+                String status = ride.getStatus();
+                // On compte uniquement les trajets terminés
+                if (status != null && (status.equalsIgnoreCase("COMPLETED") || status.equalsIgnoreCase("completed"))) {
+                    completedRidesCount++;
+                    totalKm += parseDistance(ride.getDistance());
+                }
+            }
+        }
+
+        // Calcul pour les réservations où il est PASSAGER
+        if (user.getBookingList() != null) {
+            for (entity.Booking booking : user.getBookingList()) {
+                // On vérifie le statut du TRAJET associé
+                entity.CarRide ride = booking.getCarRideId();
+                if (ride != null) {
+                    String rideStatus = ride.getStatus();
+                    if (rideStatus != null && (rideStatus.equalsIgnoreCase("COMPLETED") || rideStatus.equalsIgnoreCase("completed"))) {
+                        // On vérifie que la réservation elle-même n'est pas annulée
+                        String bookingStatus = booking.getStatus();
+                        if (!"CANCELLED".equalsIgnoreCase(bookingStatus) && !"REJECTED".equalsIgnoreCase(bookingStatus)) {
+                            completedRidesCount++;
+                            totalKm += parseDistance(ride.getDistance());
+                        }
+                    }
+                }
+            }
+        }
+
+        // Calcul du CO2 (120g/km = 0.12 kg/km)
+        double co2 = totalKm * 0.120;
+
+        // Retour du DTO complet
+        return new UserStatsDTO(
+            finalRating,
+            user.getCredits(),
+            (double) Math.round(co2 * 10) / 10, // Arrondi à 1 décimale
+            completedRidesCount
+        );
+    }
+
+    // --- nettoyage avant envoit ---
+    private double parseDistance(String distStr) {
+        if (distStr == null || distStr.isEmpty()) return 0.0;
+        try {
+            // Nettoie la chaîne (ex: "125 km" -> "125") et remplace virgule par point
+            String clean = distStr.replaceAll("[^0-9.,]", "").replace(",", ".");
+            return Double.parseDouble(clean);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
     @Override
     protected EntityManager getEntityManager() {
         return em;
