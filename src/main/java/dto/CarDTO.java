@@ -16,6 +16,7 @@ public class CarDTO implements Serializable {
     private Boolean isFavorite;
     private LocalDate purchaseDate;
     private LocalDate insuranceDate;
+    private Boolean isActive; 
 
     public CarDTO() {
     }
@@ -53,4 +54,7 @@ public class CarDTO implements Serializable {
 
     public LocalDate getInsuranceDate() { return insuranceDate; }
     public void setInsuranceDate(LocalDate insuranceDate) { this.insuranceDate = insuranceDate; }
+    
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }

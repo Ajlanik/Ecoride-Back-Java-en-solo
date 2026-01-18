@@ -21,6 +21,7 @@ public class CarMapper {
         dto.setIsFavorite(car.getIsFavorite());
         dto.setPurchaseDate(car.getPurchaseDate());
         dto.setInsuranceDate(car.getInsuranceDate());
+        dto.setIsActive(car.getIsActive());
         return dto;
     }
 

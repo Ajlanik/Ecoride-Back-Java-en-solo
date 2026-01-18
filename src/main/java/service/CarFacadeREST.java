@@ -105,6 +105,8 @@ public class CarFacadeREST extends AbstractFacade<Car> {
         if (dto.getPurchaseDate() != null) existingCar.setPurchaseDate(dto.getPurchaseDate());
         if (dto.getInsuranceDate() != null) existingCar.setInsuranceDate(dto.getInsuranceDate());
         if (dto.getIsFavorite() != null) existingCar.setIsFavorite(dto.getIsFavorite());
+        
+        if (dto.getIsActive() != null) existingCar.setIsActive(dto.getIsActive());
 
         super.edit(existingCar);
         return CarMapper.toDTO(existingCar);

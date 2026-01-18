@@ -1,6 +1,7 @@
 // service/CarRideFacadeREST.java
 package service;
 
+import dto.CarRideDTO;
 import entity.Car;
 import entity.CarRide;
 import entity.User;
@@ -17,8 +18,13 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
+import mapper.CarRideMapper;
 
 @Stateless
 @Path("carRides")
@@ -109,7 +115,7 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
     @Path("{id}")
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public CarRide find(@PathParam("id") Integer id) {
-        System.out.println("🔍 [DEBUG-BACK] GET /carRides/" + id + " appelé.");
+        System.out.println(" [DEBUG-BACK] GET /carRides/" + id + " appelé.");
         
         CarRide ride = super.find(id);
         
@@ -137,7 +143,7 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
         return ride;
     }
 
-    @GET
+    @GET //pour les admins
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
     public List<CarRide> findAll(
             @QueryParam("driverId") Integer driverId,
@@ -184,5 +190,83 @@ public class CarRideFacadeREST extends AbstractFacade<CarRide> {
     @Override
     protected EntityManager getEntityManager() {
         return em;
+    }
+    
+    @GET
+    @Path("search") // pour le user
+    @Produces(MediaType.APPLICATION_JSON)
+   public List<CarRideDTO> search(
+            @QueryParam("departure") String departure,
+            @QueryParam("arrival") String arrival,
+            @QueryParam("departureDate") String departureDateStr, // <--- CORRECTION ICI (c'était "date")
+            @Context SecurityContext securityContext) {
+
+        System.out.println("[DEBUG-BACK] Recherche de trajets (Endpoint /search)");
+
+        // 1. Récupérer l'utilisateur connecté
+        String currentUserEmail = null;
+        if (securityContext != null && securityContext.getUserPrincipal() != null) {
+            currentUserEmail = securityContext.getUserPrincipal().getName();
+            System.out.println("  > Demandeur identifié : " + currentUserEmail);
+        }
+
+        // 2. Construction de la requête JPQL
+        StringBuilder jpql = new StringBuilder("SELECT c FROM CarRide c WHERE 1=1");
+
+        // A. Règle : Pas de trajets passés
+        jpql.append(" AND c.departureDate >= :today");
+
+        // B. Règle : Ne pas afficher mes propres trajets
+        if (currentUserEmail != null) {
+            jpql.append(" AND c.driver.email != :currentUserEmail");
+        }
+
+        // C. Filtres de recherche
+        if (departure != null && !departure.isEmpty()) {
+            jpql.append(" AND LOWER(c.departurePlace) LIKE LOWER(:dep)");
+        }
+        if (arrival != null && !arrival.isEmpty()) {
+            jpql.append(" AND LOWER(c.arrivalPlace) LIKE LOWER(:arr)");
+        }
+        
+        // CORRECTION : On utilise la variable renommée departureDateStr
+        if (departureDateStr != null && !departureDateStr.isEmpty()) {
+            jpql.append(" AND c.departureDate = :targetDate");
+        }
+        
+        jpql.append(" ORDER BY c.departureDate ASC, c.departureTime ASC");
+
+        // 3. Création de la Query
+        TypedQuery<CarRide> query = em.createQuery(jpql.toString(), CarRide.class);
+
+        // 4. Injection des paramètres
+        query.setParameter("today", LocalDate.now());
+        
+        if (currentUserEmail != null) {
+            query.setParameter("currentUserEmail", currentUserEmail);
+        }
+        if (departure != null && !departure.isEmpty()) {
+            query.setParameter("dep", "%" + departure + "%");
+        }
+        if (arrival != null && !arrival.isEmpty()) {
+            query.setParameter("arr", "%" + arrival + "%");
+        }
+        
+        // CORRECTION : On parse departureDateStr
+        if (departureDateStr != null && !departureDateStr.isEmpty()) {
+            try {
+                query.setParameter("targetDate", LocalDate.parse(departureDateStr));
+            } catch (Exception e) {
+                System.err.println("  > Erreur format date : " + departureDateStr);
+            }
+        }
+
+        // 5. Exécution et transformation en DTO
+        List<CarRide> rides = query.getResultList();
+        System.out.println("  > Résultats bruts trouvés : " + rides.size());
+
+        return rides.stream()
+                .map(CarRideMapper::toDTO)
+                .collect(Collectors.toList());
     }
 }
